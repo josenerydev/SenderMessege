@@ -27,5 +27,21 @@ public class QueueService : IQueueService
         {
             queuePool.Return(queueClient);
         }
+
+        // Send the same message to the zombie queue
+        var zombieQueueName = $"{queueName}-zombie";
+
+        var zombieQueuePool = _queuePools[zombieQueueName];
+        var zombieQueueClient = zombieQueuePool.Get();
+
+        try
+        {
+            await zombieQueueClient.CreateIfNotExistsAsync();
+            await zombieQueueClient.SendMessageAsync(message);
+        }
+        finally
+        {
+            zombieQueuePool.Return(zombieQueueClient);
+        }
     }
 }

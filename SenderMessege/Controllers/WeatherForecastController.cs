@@ -35,14 +35,9 @@ namespace SenderMessege.Controllers
 
             foreach (var forecast in weatherForecast)
             {
-                // Serialize the forecast to a JSON string
                 string message = JsonSerializer.Serialize(forecast);
 
-                // Send the message to the main queue
                 await _queueService.SendMessageAsync(message, "sample-queue");
-
-                // Send the message to the zombie queue
-                await _queueService.SendMessageAsync(message, "sample-queue-zombie");
             }
 
             return weatherForecast;
