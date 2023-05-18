@@ -1,5 +1,3 @@
-using Azure.Storage.Queues;
-
 using Microsoft.AspNetCore.Mvc;
 
 using System.Text.Json;
@@ -13,17 +11,15 @@ namespace SenderMessege.Controllers
         private static readonly string[] Summaries = new[]
         {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
+        };
 
-        private readonly string _connectionString;
-        private readonly string _queueName;
+        private readonly IQueueService _queueService;
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IConfiguration configuration)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IQueueService queueService)
         {
             _logger = logger;
-            _connectionString = configuration.GetConnectionString("MyStorageConnection");
-            _queueName = configuration.GetValue<string>("QueueName");
+            _queueService = queueService;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -37,22 +33,16 @@ namespace SenderMessege.Controllers
             })
             .ToArray();
 
-            QueueClientOptions options = new QueueClientOptions
-            {
-                MessageEncoding = QueueMessageEncoding.Base64
-            };
-
-            QueueClient queue = new QueueClient(_connectionString, _queueName, options);
-
-            await queue.CreateAsync();
-
             foreach (var forecast in weatherForecast)
             {
                 // Serialize the forecast to a JSON string
                 string message = JsonSerializer.Serialize(forecast);
 
-                // Send the message to the queue
-                await queue.SendMessageAsync(message);
+                // Send the message to the main queue
+                await _queueService.SendMessageAsync(message, "sample-queue");
+
+                // Send the message to the zombie queue
+                await _queueService.SendMessageAsync(message, "sample-queue-zombie");
             }
 
             return weatherForecast;
