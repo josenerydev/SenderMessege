@@ -17,11 +17,13 @@ public class QueueService : IQueueService
     {
         var queuePool = _queuePools[queueName];
         var queueClient = queuePool.Get();
+        TimeSpan neverExpireMessageTimeSpan = TimeSpan.FromSeconds(-1);
 
         try
         {
             await queueClient.CreateIfNotExistsAsync();
-            await queueClient.SendMessageAsync(message);
+
+            await queueClient.SendMessageAsync(message, timeToLive: neverExpireMessageTimeSpan);
         }
         finally
         {
@@ -37,7 +39,7 @@ public class QueueService : IQueueService
         try
         {
             await zombieQueueClient.CreateIfNotExistsAsync();
-            await zombieQueueClient.SendMessageAsync(message);
+            await zombieQueueClient.SendMessageAsync(message, timeToLive: neverExpireMessageTimeSpan);
         }
         finally
         {
