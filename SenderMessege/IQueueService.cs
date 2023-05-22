@@ -2,6 +2,6 @@
 {
     public interface IQueueService
     {
-        Task SendMessageAsync(string queueName, string message);
+        Task SendMessageAsync(string message, string queueName);
     }
 }
